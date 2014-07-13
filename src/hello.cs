@@ -6,36 +6,52 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
  
-namespace Example
+namespace Picomancer.LifeCube
 {
-    class MyApplication
+    public class App : IDisposable
     {
+        public GameWindow win;
+
+        public App()
+        {
+            Console.WriteLine("App()");
+            this.win = new GameWindow();
+            return;
+        }
+
+        public void Dispose()
+        {
+            Console.WriteLine("App.Dispose()");
+            this.win.Dispose();
+            return;
+        }
+
         [STAThread]
         public static void Main()
         {
-            using (var game = new GameWindow())
+            using (var app = new App())
             {
-                game.Load += (sender, e) =>
+                app.win.Load += (sender, e) =>
                 {
                     // setup settings, load textures, sounds
-                    game.VSync = VSyncMode.On;
+                    app.win.VSync = VSyncMode.On;
                 };
  
-                game.Resize += (sender, e) =>
+                app.win.Resize += (sender, e) =>
                 {
-                    GL.Viewport(0, 0, game.Width, game.Height);
+                    GL.Viewport(0, 0, app.win.Width, app.win.Height);
                 };
  
-                game.UpdateFrame += (sender, e) =>
+                app.win.UpdateFrame += (sender, e) =>
                 {
                     // add game logic, input handling
-                    if (game.Keyboard[Key.Escape])
+                    if (app.win.Keyboard[Key.Escape])
                     {
-                        game.Exit();
+                        app.win.Exit();
                     }
                 };
  
-                game.RenderFrame += (sender, e) =>
+                app.win.RenderFrame += (sender, e) =>
                 {
                     // render graphics
                     GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -55,11 +71,11 @@ namespace Example
  
                     GL.End();
  
-                    game.SwapBuffers();
+                    app.win.SwapBuffers();
                 };
  
                 // Run the game at 60 updates per second
-                game.Run(60.0);
+                app.win.Run(60.0);
             }
         }
     }
