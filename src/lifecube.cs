@@ -16,6 +16,58 @@ namespace Picomancer.LifeCube
         {
             Console.WriteLine("App()");
             this.win = new GameWindow();
+
+            this.win.Load += (sender, e) =>
+            {
+                // setup settings, load textures, sounds
+                this.win.VSync = VSyncMode.On;
+
+                return;
+            };
+
+            this.win.Resize += (sender, e) =>
+            {
+                GL.Viewport(0, 0, this.win.Width, this.win.Height);
+
+                return;
+            };
+
+            this.win.UpdateFrame += (sender, e) =>
+            {
+                // add game logic, input handling
+                if (this.win.Keyboard[Key.Escape])
+                {
+                    this.win.Exit();
+                }
+
+                return;
+            };
+
+            this.win.RenderFrame += (sender, e) =>
+            {
+                // render graphics
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                GL.MatrixMode(MatrixMode.Projection);
+                GL.LoadIdentity();
+                GL.Ortho(-1.0, 1.0, -1.0, 1.0, 0.0, 4.0);
+
+                GL.Begin(BeginMode.Triangles);
+
+                GL.Color3(Color.MidnightBlue);
+                GL.Vertex2(-1.0f, 1.0f);
+                GL.Color3(Color.SpringGreen);
+                GL.Vertex2(0.0f, -1.0f);
+                GL.Color3(Color.Ivory);
+                GL.Vertex2(1.0f, 1.0f);
+
+                GL.End();
+
+                this.win.SwapBuffers();
+
+                return;
+            };
+ 
             return;
         }
 
@@ -31,52 +83,11 @@ namespace Picomancer.LifeCube
         {
             using (var app = new App())
             {
-                app.win.Load += (sender, e) =>
-                {
-                    // setup settings, load textures, sounds
-                    app.win.VSync = VSyncMode.On;
-                };
- 
-                app.win.Resize += (sender, e) =>
-                {
-                    GL.Viewport(0, 0, app.win.Width, app.win.Height);
-                };
- 
-                app.win.UpdateFrame += (sender, e) =>
-                {
-                    // add game logic, input handling
-                    if (app.win.Keyboard[Key.Escape])
-                    {
-                        app.win.Exit();
-                    }
-                };
- 
-                app.win.RenderFrame += (sender, e) =>
-                {
-                    // render graphics
-                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
- 
-                    GL.MatrixMode(MatrixMode.Projection);
-                    GL.LoadIdentity();
-                    GL.Ortho(-1.0, 1.0, -1.0, 1.0, 0.0, 4.0);
- 
-                    GL.Begin(BeginMode.Triangles);
- 
-                    GL.Color3(Color.MidnightBlue);
-                    GL.Vertex2(-1.0f, 1.0f);
-                    GL.Color3(Color.SpringGreen);
-                    GL.Vertex2(0.0f, -1.0f);
-                    GL.Color3(Color.Ivory);
-                    GL.Vertex2(1.0f, 1.0f);
- 
-                    GL.End();
- 
-                    app.win.SwapBuffers();
-                };
- 
                 // Run the game at 60 updates per second
                 app.win.Run(60.0);
             }
+
+            return;
         }
     }
 }
