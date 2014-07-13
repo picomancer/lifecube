@@ -1,2 +1,2 @@
 #!/bin/sh
-mono bin/lifecube.exe
+mono --runtime=v4.0 bin/lifecube.exe
