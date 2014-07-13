@@ -12,12 +12,14 @@ namespace Picomancer.LifeCube
     {
         public GameWindow win;
         public uint face_width, face_height;
+        public MyMesh mesh;
 
-        public enum VB
+        public class VB
         {
-            cube_vertex,
-            cube_index,
-            count
+            // don't use an enum for this to avoid inability to cast to int
+            public const int cube_vertex = 0;
+            public const int cube_index = 1;
+            public const int count = 2;
         };
 
         public const uint VERTEX_SIZE = 7;
@@ -42,11 +44,11 @@ namespace Picomancer.LifeCube
         // xy, z=0    xz, y=0    yz, x=0
         // xy, z=1    xz, y=1    yz, z=1
         public static float[] face_x0 =
-            {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+            {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
         public static float[] face_y0 =
             {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
         public static float[] face_z0 =
-            {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+            {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
 
         public static float[] face_ux =
             {1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f};
@@ -90,12 +92,8 @@ namespace Picomancer.LifeCube
                 // setup settings, load textures, sounds
                 this.win.VSync = VSyncMode.On;
 
-                this.vbo_id = new uint[(int) VB.count];
-                GL.GenBuffers((int) VB.count, vbo_id);
-
-                GL.ColorPointer(4, ColorPointerType.UnsignedByte, (int) VERTEX_SIZE * sizeof(float), (IntPtr) (0 * sizeof(float)));
-                GL.VertexPointer(3,      VertexPointerType.Float, (int) VERTEX_SIZE * sizeof(float), (IntPtr) (1 * sizeof(float)));
-                GL.NormalPointer(        NormalPointerType.Float, (int) VERTEX_SIZE * sizeof(float), (IntPtr) (4 * sizeof(float)));
+                this.vbo_id = new uint[VB.count];
+                GL.GenBuffers(VB.count, vbo_id);
 
                 float[] vertex = new float [6*(this.face_width)*(this.face_height)*4*VERTEX_SIZE];
                 ushort[] index = new ushort[6*(this.face_width)*(this.face_height)*6*VERTEX_SIZE];
@@ -174,6 +172,22 @@ namespace Picomancer.LifeCube
                     }
                 }
 
+                // setup vertex buffer
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
+                GL.BufferData(BufferTarget.ArrayBuffer,
+                              (IntPtr) (vertex.Length * sizeof(float)),
+                              vertex,
+                              BufferUsageHint.StaticDraw);
+
+                // setup index buffer
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, vbo_id[VB.cube_index]);
+                GL.BufferData(BufferTarget.ElementArrayBuffer,
+                              (IntPtr) (index.Length * sizeof(ushort)),
+                              index,
+                              BufferUsageHint.StaticDraw);
+
+                mesh.index_count = ni;
+
                 return;
             };
 
@@ -207,8 +221,26 @@ namespace Picomancer.LifeCube
 
                 GL.MatrixMode(MatrixMode.Projection);
                 GL.LoadIdentity();
+
                 GL.Ortho(-1.0, 1.0, -1.0, 1.0, 0.0, 4.0);
 
+                GL.Scale(0.025, 0.025, 0.025);
+
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
+
+                GL.ColorPointer(4, ColorPointerType.UnsignedByte, (int) VERTEX_SIZE * sizeof(float), (IntPtr) (0 * sizeof(float)));
+                GL.EnableClientState(ArrayCap.ColorArray);
+
+                GL.VertexPointer(3,      VertexPointerType.Float, (int) VERTEX_SIZE * sizeof(float), (IntPtr) (1 * sizeof(float)));
+                GL.EnableClientState(ArrayCap.VertexArray);
+
+                GL.NormalPointer(        NormalPointerType.Float, (int) VERTEX_SIZE * sizeof(float), (IntPtr) (4 * sizeof(float)));
+                GL.EnableClientState(ArrayCap.NormalArray);
+
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_index]);
+                GL.DrawElements(BeginMode.Triangles, (int) mesh.index_count, DrawElementsType.UnsignedShort, IntPtr.Zero);
+
+                /*
                 GL.Begin(BeginMode.Triangles);
 
                 GL.Color3(Color.MidnightBlue);
@@ -219,6 +251,7 @@ namespace Picomancer.LifeCube
                 GL.Vertex2(1.0f, 1.0f);
 
                 GL.End();
+                */
 
                 this.win.SwapBuffers();
 
@@ -245,6 +278,11 @@ namespace Picomancer.LifeCube
             }
 
             return;
+        }
+
+        public struct MyMesh
+        {
+            public uint index_count;
         }
     }
 }
