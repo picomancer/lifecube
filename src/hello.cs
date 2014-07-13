@@ -44,7 +44,7 @@ namespace Example
                     GL.LoadIdentity();
                     GL.Ortho(-1.0, 1.0, -1.0, 1.0, 0.0, 4.0);
  
-                    GL.Begin(PrimitiveType.Triangles);
+                    GL.Begin(BeginMode.Triangles);
  
                     GL.Color3(Color.MidnightBlue);
                     GL.Vertex2(-1.0f, 1.0f);
