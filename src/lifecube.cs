@@ -5,7 +5,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
- 
+
 namespace Picomancer.LifeCube
 {
     public class App : IDisposable
@@ -13,6 +13,7 @@ namespace Picomancer.LifeCube
         public GameWindow win;
         public uint face_width, face_height;
         public MyMesh mesh;
+        public Matrix4 m_model;
 
         public class VB
         {
@@ -30,7 +31,7 @@ namespace Picomancer.LifeCube
         public uint[] vbo_id;
         public static float[] face2color = {
             intBitsToFloat(0xFF0000FF),
-            intBitsToFloat(0xFF00FF00),
+            intBitsToFloat(0xFFFFFFFF),
             intBitsToFloat(0xFF00FFFF),
             intBitsToFloat(0xFFFF0000),
             intBitsToFloat(0xFFFF00FF),
@@ -65,11 +66,11 @@ namespace Picomancer.LifeCube
             {0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
 
         public static float[] face_nx =
-            {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+            {0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f};
         public static float[] face_ny =
-            {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+            {0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f};
         public static float[] face_nz =
-            {1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+            { 1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f};
 
         public static float intBitsToFloat(uint x)
         {
@@ -98,14 +99,14 @@ namespace Picomancer.LifeCube
                 float[] vertex = new float [6*(this.face_width)*(this.face_height)*4*VERTEX_SIZE];
                 ushort[] index = new ushort[6*(this.face_width)*(this.face_height)*6*VERTEX_SIZE];
 
-                uint wp1 = this.face_width+1;
+                uint w = this.face_width;
                 uint k = 0, nv = 0, ni = 0;
                 for(uint face=0;face<6;face++)
                 {
                     // TODO:  adjust multiplier for non-cubic case
-                    float x0 = face_x0[face] * wp1;
-                    float y0 = face_y0[face] * wp1;
-                    float z0 = face_z0[face] * wp1;
+                    float x0 = face_x0[face] * w;
+                    float y0 = face_y0[face] * w;
+                    float z0 = face_z0[face] * w;
 
                     float ux = face_ux[face];
                     float uy = face_uy[face];
@@ -188,6 +189,8 @@ namespace Picomancer.LifeCube
 
                 mesh.index_count = ni;
 
+                m_model = Matrix4.Scale(0.025f);
+
                 return;
             };
 
@@ -210,6 +213,22 @@ namespace Picomancer.LifeCube
                 {
                     this.win.Exit();
                 }
+                if (this.win.Keyboard[Key.Left])
+                {
+                    m_model = Matrix4.CreateRotationZ(-.025f)*m_model;
+                }
+                if (this.win.Keyboard[Key.Right])
+                {
+                    m_model = Matrix4.CreateRotationZ(.025f)*m_model;
+                }
+                if (this.win.Keyboard[Key.Up])
+                {
+                    m_model = Matrix4.CreateRotationX(-.025f)*m_model;
+                }
+                if (this.win.Keyboard[Key.Down])
+                {
+                    m_model = Matrix4.CreateRotationX(.025f)*m_model;
+                }
 
                 return;
             };
@@ -217,14 +236,14 @@ namespace Picomancer.LifeCube
             this.win.RenderFrame += (sender, e) =>
             {
                 // render graphics
+                GL.Enable(EnableCap.DepthTest);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 GL.LoadIdentity();
 
-                GL.Ortho(-1.0, 1.0, -1.0, 1.0, 0.0, 4.0);
-
-                GL.Scale(0.025, 0.025, 0.025);
+                //GL.Ortho(-1.0, 1.0, -1.0, 1.0, 0.0, 4.0);
+                GL.MultMatrix(ref m_model);
 
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
 
