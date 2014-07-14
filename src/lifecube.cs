@@ -45,11 +45,11 @@ namespace Picomancer.LifeCube
         // xy, z=0    xz, y=0    yz, x=0
         // xy, z=1    xz, y=1    yz, z=1
         public static float[] face_x0 =
-            {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+            {-0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f};
         public static float[] face_y0 =
-            {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+            {-0.5f, -0.5f, -0.5f, -0.5f,  0.5f, -0.5f};
         public static float[] face_z0 =
-            {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+            {-0.5f, -0.5f, -0.5f,  0.5f, -0.5f, -0.5f};
 
         public static float[] face_ux =
             {1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f};
@@ -215,19 +215,19 @@ namespace Picomancer.LifeCube
                 }
                 if (this.win.Keyboard[Key.Left])
                 {
-                    m_model = Matrix4.CreateRotationZ(-.025f)*m_model;
+                    m_model = m_model*Matrix4.CreateRotationY(-.025f);
                 }
                 if (this.win.Keyboard[Key.Right])
                 {
-                    m_model = Matrix4.CreateRotationZ(.025f)*m_model;
+                    m_model = m_model*Matrix4.CreateRotationY(.025f);
                 }
                 if (this.win.Keyboard[Key.Up])
                 {
-                    m_model = Matrix4.CreateRotationX(-.025f)*m_model;
+                    m_model = m_model*Matrix4.CreateRotationX(.025f);
                 }
                 if (this.win.Keyboard[Key.Down])
                 {
-                    m_model = Matrix4.CreateRotationX(.025f)*m_model;
+                    m_model = m_model*Matrix4.CreateRotationX(-.025f);
                 }
 
                 return;
