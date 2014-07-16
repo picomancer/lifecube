@@ -1,4 +1,4 @@
 #!/bin/sh
 mkdir -p bin
-(cd src && mcs *.cs -r:/usr/lib/cli/OpenTK-1.0/OpenTK.dll -r:System.Drawing -out:../bin/lifecube.exe)
-
+(cd src && mcs *.cs -r:../dep/OpenTK.dll -r:System.Drawing -out:../bin/lifecube.exe)
+[ -e bin/OpenTK.dll ] || ln -s ../dep/OpenTK.dll bin/OpenTK.dll
