@@ -189,7 +189,7 @@ namespace Picomancer.LifeCube
 
                 mesh.index_count = ni;
 
-                m_model = Matrix4.Scale(0.025f);
+                m_model = Matrix4.CreateScale(0.025f);
 
                 return;
             };
@@ -257,7 +257,7 @@ namespace Picomancer.LifeCube
                 GL.EnableClientState(ArrayCap.NormalArray);
 
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_index]);
-                GL.DrawElements(BeginMode.Triangles, (int) mesh.index_count, DrawElementsType.UnsignedShort, IntPtr.Zero);
+                GL.DrawElements(PrimitiveType.Triangles, (int) mesh.index_count, DrawElementsType.UnsignedShort, IntPtr.Zero);
 
                 /*
                 GL.Begin(BeginMode.Triangles);
