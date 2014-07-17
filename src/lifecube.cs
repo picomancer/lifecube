@@ -14,6 +14,8 @@ namespace Picomancer.LifeCube
         public uint face_width, face_height;
         public MyMesh mesh;
         public Matrix4 m_model;
+        public float[] vertex;
+        public uint[] vbo_id;
 
         public class VB
         {
@@ -28,7 +30,6 @@ namespace Picomancer.LifeCube
         // vertex : 3f
         // normal : 3f
 
-        public uint[] vbo_id;
         public static float[] face2color = {
             intBitsToFloat(0xFF0000FF),
             intBitsToFloat(0xFFFFFFFF),
@@ -96,7 +97,7 @@ namespace Picomancer.LifeCube
                 this.vbo_id = new uint[VB.count];
                 GL.GenBuffers(VB.count, vbo_id);
 
-                float[] vertex = new float [6*(this.face_width)*(this.face_height)*4*VERTEX_SIZE];
+                vertex = new float [6*(this.face_width)*(this.face_height)*4*VERTEX_SIZE];
                 ushort[] index = new ushort[6*(this.face_width)*(this.face_height)*6*VERTEX_SIZE];
 
                 uint w = this.face_width;
@@ -178,7 +179,7 @@ namespace Picomancer.LifeCube
                 GL.BufferData(BufferTarget.ArrayBuffer,
                               (IntPtr) (vertex.Length * sizeof(float)),
                               vertex,
-                              BufferUsageHint.StaticDraw);
+                              BufferUsageHint.StreamDraw);
 
                 // setup index buffer
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, vbo_id[VB.cube_index]);
