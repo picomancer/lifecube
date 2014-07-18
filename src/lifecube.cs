@@ -14,8 +14,11 @@ namespace Picomancer.LifeCube
         public uint face_width, face_height;
         public MyMesh mesh;
         public Matrix4 m_model;
+        public float[] vertex_base;
         public float[] vertex;
         public uint[] vbo_id;
+        public uint[] face_start_offset;
+        public int act_x, act_y, act_face;
 
         public class VB
         {
@@ -40,6 +43,7 @@ namespace Picomancer.LifeCube
             };
 
         public static float BLACK = intBitsToFloat(0xFF000000);
+        public static float C_ACTIVE = intBitsToFloat(0xFF808000);
 
         // 6 faces:
         //
@@ -89,6 +93,10 @@ namespace Picomancer.LifeCube
             this.face_width = 20;
             this.face_height = 20;
 
+            this.act_x = 0;
+            this.act_y = 0;
+            this.act_face = 0;
+
             this.win.Load += (sender, e) =>
             {
                 // setup settings, load textures, sounds
@@ -100,10 +108,14 @@ namespace Picomancer.LifeCube
                 vertex = new float [6*(this.face_width)*(this.face_height)*4*VERTEX_SIZE];
                 ushort[] index = new ushort[6*(this.face_width)*(this.face_height)*6*VERTEX_SIZE];
 
+                face_start_offset = new uint[6];
+
                 uint w = this.face_width;
                 uint k = 0, nv = 0, ni = 0;
                 for(uint face=0;face<6;face++)
                 {
+                    face_start_offset[face] = k;
+
                     // TODO:  adjust multiplier for non-cubic case
                     float x0 = face_x0[face] * w;
                     float y0 = face_y0[face] * w;
@@ -192,6 +204,9 @@ namespace Picomancer.LifeCube
 
                 m_model = Matrix4.CreateScale(0.025f);
 
+                vertex_base = new float[vertex.Length];
+                Array.Copy(vertex, vertex_base, vertex.Length);
+
                 return;
             };
 
@@ -277,7 +292,75 @@ namespace Picomancer.LifeCube
 
                 return;
             };
+
+            this.win.Keyboard.KeyDown += (sender, e) =>
+            {
+                if (e.Key == Key.U)
+                {
+                    move_active(0, -1, 0);
+                }
+                if (e.Key == Key.H)
+                {
+                    move_active(-1, 0, 0);
+                }
+                if (e.Key == Key.M)
+                {
+                    move_active(0, 1, 0);
+                }
+                if (e.Key == Key.K)
+                {
+                    move_active(1, 0, 0);
+                }
+                if (e.Key == Key.F)
+                {
+                    move_active(0, 0, -1);
+                }
+                if (e.Key == Key.G)
+                {
+                    move_active(0, 0,  1);
+                }
+                return;
+            };
  
+            return;
+        }
+
+        public void move_active(int dx, int dy, int df)
+        {
+            int xp = this.act_x + dx;
+            int yp = this.act_y + dy;
+            int fp = this.act_face + df;
+
+            xp = Math.Max(xp, 0);
+            yp = Math.Max(yp, 0);
+
+            xp = (int) Math.Min(xp, this.face_width-1);
+            yp = (int) Math.Min(yp, this.face_height-1);
+
+            fp %= 6;
+            fp += (fp < 0) ? 6 : 0;
+
+            this.act_x = xp;
+            this.act_y = yp;
+            this.act_face = fp;
+
+            // update highlight.
+            Array.Copy(vertex_base, vertex, vertex.Length);
+
+            uint i = face_start_offset[this.act_face];
+            i += (uint) (4*VERTEX_SIZE*(this.act_y * this.face_width + this.act_x));
+
+            vertex[i              ] = C_ACTIVE;
+            vertex[i+  VERTEX_SIZE] = C_ACTIVE;
+            vertex[i+2*VERTEX_SIZE] = C_ACTIVE;
+            vertex[i+3*VERTEX_SIZE] = C_ACTIVE;
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
+            GL.BufferData(BufferTarget.ArrayBuffer,
+                          (IntPtr) (vertex.Length * sizeof(float)),
+                          vertex,
+                          BufferUsageHint.StreamDraw);
+
             return;
         }
 
