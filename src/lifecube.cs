@@ -325,6 +325,19 @@ namespace Picomancer.LifeCube
             return;
         }
 
+        public void set_color(int face, int x, int y, float c)
+        {
+            uint i = face_start_offset[face];
+            i += (uint) (4*VERTEX_SIZE*(y * this.face_width + x));
+
+            vertex[i              ] = c;
+            vertex[i+  VERTEX_SIZE] = c;
+            vertex[i+2*VERTEX_SIZE] = c;
+            vertex[i+3*VERTEX_SIZE] = c;
+
+            return;
+        }
+
         public void move_active(int dx, int dy, int df)
         {
             int xp = this.act_x + dx;
@@ -347,13 +360,7 @@ namespace Picomancer.LifeCube
             // update highlight.
             Array.Copy(vertex_base, vertex, vertex.Length);
 
-            uint i = face_start_offset[this.act_face];
-            i += (uint) (4*VERTEX_SIZE*(this.act_y * this.face_width + this.act_x));
-
-            vertex[i              ] = C_ACTIVE;
-            vertex[i+  VERTEX_SIZE] = C_ACTIVE;
-            vertex[i+2*VERTEX_SIZE] = C_ACTIVE;
-            vertex[i+3*VERTEX_SIZE] = C_ACTIVE;
+            this.set_color(this.act_face, this.act_x, this.act_y, C_ACTIVE);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
             GL.BufferData(BufferTarget.ArrayBuffer,
