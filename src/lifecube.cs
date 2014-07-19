@@ -44,11 +44,12 @@ namespace Picomancer.LifeCube
 
         public static float BLACK = intBitsToFloat(0xFF000000);
         public static float C_ACTIVE = intBitsToFloat(0xFF808000);
+        public static float C_NBHD = intBitsToFloat(0xFF008000);
 
         // 6 faces:
         //
         // xy, z=0    xz, y=0    yz, x=0
-        // xy, z=1    xz, y=1    yz, z=1
+        // xy, z=1    xz, y=1    yz, x=1
         public static float[] face_x0 =
             {-0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f};
         public static float[] face_y0 =
@@ -76,6 +77,40 @@ namespace Picomancer.LifeCube
             {0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f};
         public static float[] face_nz =
             { 1.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f};
+
+        public static int[] dir4_dx =
+            { 1, 0, -1,  0 };
+        public static int[] dir4_dy =
+            { 0, 1,  0, -1 };
+
+        public static int[] dir8_dx =
+            { 1, 1, 0, -1, -1, -1,  0,  1 };
+        public static int[] dir8_dy =
+            { 0, 1, 1,  1,  0, -1, -1, -1 };
+
+        // 0  1  2  3  4  5
+        // z- y- x- z+ y+ x+
+        // xy xz yz xy xz yz
+        //
+        // 0: x+ y+ x- y-    5 4 2 1
+        // 1: x+ z+ x- z-    5 3 2 0
+        // 2: y+ z+ y- z-    4 3 1 0
+        // 3: x+ y+ x- y-    5 4 2 1
+        // 4: x+ z+ x- z-    5 3 2 0
+        // 5: y+ z+ y- z-    4 3 1 0
+        //
+
+        // face,wrapx,wrapy,delta_axis
+        // wrapx,wrapy : Beginning coordinate of target face
+        // delta_axis  : Whether the shared axis is axis 0 or 1 of the new face
+
+        public static int[,,] adj_side = new int[,,]
+            {{ {5,0,0,0}, {4,0,0,0}, {2,0,0,0}, {1,0,0,0} },
+             { {5,0,0,1}, {3,0,0,0}, {2,0,0,1}, {0,0,0,0} },
+             { {4,0,0,1}, {3,0,0,1}, {1,0,0,1}, {0,0,0,1} },
+             { {5,0,1,0}, {4,0,1,0}, {2,0,1,0}, {1,0,1,0} },
+             { {5,1,0,1}, {3,0,1,0}, {2,1,0,1}, {0,0,1,0} },
+             { {4,1,0,1}, {3,1,0,1}, {1,1,0,1}, {0,1,0,1} }};
 
         public static float intBitsToFloat(uint x)
         {
@@ -338,6 +373,89 @@ namespace Picomancer.LifeCube
             return;
         }
 
+        public int[][] get_adj(int face, int x, int y)
+        {
+            int[][] result = new int[8][];
+            // (face, x, y) tuples
+
+            int wm1 = ((int) this.face_width)-1;
+            int hm1 = ((int) this.face_height)-1;
+
+            for(int i=0;i<8;i++)
+            {
+                int fp, xp, yp;
+                int bindex;
+
+                xp = x+dir8_dx[i];
+                yp = y+dir8_dy[i];
+
+                int cc = (xp >= this.face_width ) ? 1 : 0;
+                cc    |= (yp >= this.face_height) ? 2 : 0;
+                cc    |= (xp < 0) ? 4 : 0;
+                cc    |= (yp < 0) ? 8 : 0;
+
+                result[i] = new int[3];
+
+                switch(cc)
+                {
+                case 0:
+                    result[i][0] = face;
+                    result[i][1] = xp;
+                    result[i][2] = yp;
+
+                    break;
+                case 1:
+                    // wrap in +x direction
+                    bindex = 0;
+
+                    result[i][0] = adj_side[face,bindex,0];
+                    result[i][1] = (adj_side[face,bindex,1] != 0) ? wm1 : 0;
+                    result[i][2] = (adj_side[face,bindex,2] != 0) ? hm1 : 0;
+                    result[i][1+adj_side[face,bindex,3]] = yp;
+
+                    break;
+                case 2:
+                    // wrap in +y direction
+                    bindex = 1;
+
+                    result[i][0] = adj_side[face,bindex,0];
+                    result[i][1] = (adj_side[face,bindex,1] != 0) ? wm1 : 0;
+                    result[i][2] = (adj_side[face,bindex,2] != 0) ? hm1 : 0;
+                    result[i][1+adj_side[face,bindex,3]] = xp;
+
+                    break;
+                case 4:
+                    // wrap in -x direction
+                    bindex = 2;
+
+                    result[i][0] = adj_side[face,bindex,0];
+                    result[i][1] = (adj_side[face,bindex,1] != 0) ? wm1 : 0;
+                    result[i][2] = (adj_side[face,bindex,2] != 0) ? hm1 : 0;
+                    result[i][1+adj_side[face,bindex,3]] = yp;
+
+                    break;
+                case 8:
+                    // wrap in -y direction
+                    bindex = 3;
+
+                    result[i][0] = adj_side[face,bindex,0];
+                    result[i][1] = (adj_side[face,bindex,1] != 0) ? wm1 : 0;
+                    result[i][2] = (adj_side[face,bindex,2] != 0) ? hm1 : 0;
+                    result[i][1+adj_side[face,bindex,3]] = xp;
+
+                    break;
+                default:
+                    // double wrap
+                    result[i][0] = -1;
+                    result[i][1] = -1;
+                    result[i][2] = -1;
+
+                    break;
+                }
+            }
+            return result;
+        }
+
         public void move_active(int dx, int dy, int df)
         {
             int xp = this.act_x + dx;
@@ -361,6 +479,16 @@ namespace Picomancer.LifeCube
             Array.Copy(vertex_base, vertex, vertex.Length);
 
             this.set_color(this.act_face, this.act_x, this.act_y, C_ACTIVE);
+            int[][] nbhd = this.get_adj(this.act_face, this.act_x, this.act_y);
+
+            for(int i=0;i<8;i++)
+            {
+                fp = nbhd[i][0];
+                xp = nbhd[i][1];
+                yp = nbhd[i][2];
+                if (fp >= 0)
+                    this.set_color(fp, xp, yp, C_NBHD);
+            }
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
             GL.BufferData(BufferTarget.ArrayBuffer,
