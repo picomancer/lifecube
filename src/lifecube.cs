@@ -34,12 +34,12 @@ namespace Picomancer.LifeCube
         // normal : 3f
 
         public static float[] face2color = {
-            intBitsToFloat(0xFF0000FF),
-            intBitsToFloat(0xFFFFFFFF),
-            intBitsToFloat(0xFF00FFFF),
-            intBitsToFloat(0xFFFF0000),
-            intBitsToFloat(0xFFFF00FF),
-            intBitsToFloat(0xFFFFFF00)
+            intBitsToFloat(0xFF000040),
+            intBitsToFloat(0xFF404040),
+            intBitsToFloat(0xFF004040),
+            intBitsToFloat(0xFF400000),
+            intBitsToFloat(0xFF400040),
+            intBitsToFloat(0xFF404000)
             };
 
         public static float BLACK = intBitsToFloat(0xFF000000);
