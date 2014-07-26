@@ -172,9 +172,7 @@ namespace Picomancer.LifeCube
                     {
                         for(uint u=0;u<this.face_width;u++)
                         {
-                            float c = (((u^v)&1) != 0) ? face2color[face] : BLACK;
-
-                            vertex[k   ] = c;
+                            vertex[k   ] = BLACK;
                             vertex[k+1 ] = x0 + ux * (u  ) + vx * (v  );
                             vertex[k+2 ] = y0 + uy * (u  ) + vy * (v  );
                             vertex[k+3 ] = z0 + uz * (u  ) + vz * (v  );
@@ -182,7 +180,7 @@ namespace Picomancer.LifeCube
                             vertex[k+5 ] = ny;
                             vertex[k+6 ] = nz;
 
-                            vertex[k+7 ] = c;
+                            vertex[k+7 ] = BLACK;
                             vertex[k+8 ] = x0 + ux * (u+1) + vx * (v  );
                             vertex[k+9 ] = y0 + uy * (u+1) + vy * (v  );
                             vertex[k+10] = z0 + uz * (u+1) + vz * (v  );
@@ -190,7 +188,7 @@ namespace Picomancer.LifeCube
                             vertex[k+12] = ny;
                             vertex[k+13] = nz;
 
-                            vertex[k+14] = c;
+                            vertex[k+14] = BLACK;
                             vertex[k+15] = x0 + ux * (u  ) + vx * (v+1);
                             vertex[k+16] = y0 + uy * (u  ) + vy * (v+1);
                             vertex[k+17] = z0 + uz * (u  ) + vz * (v+1);
@@ -198,7 +196,7 @@ namespace Picomancer.LifeCube
                             vertex[k+19] = ny;
                             vertex[k+20] = nz;
 
-                            vertex[k+21] = c;
+                            vertex[k+21] = BLACK;
                             vertex[k+22] = x0 + ux * (u+1) + vx * (v+1);
                             vertex[k+23] = y0 + uy * (u+1) + vy * (v+1);
                             vertex[k+24] = z0 + uz * (u+1) + vz * (v+1);
@@ -217,6 +215,18 @@ namespace Picomancer.LifeCube
                             k += 4*VERTEX_SIZE;
                             nv += 4;
                             ni += 6;
+                        }
+                    }
+                }
+
+                for(int face=0;face<6;face++)
+                {
+                    for(int y=0;y<this.face_height;y++)
+                    {
+                        for(int x=0;x<this.face_width;x++)
+                        {
+                            float c = (((x^y)&1) != 0) ? face2color[face] : BLACK;
+                            this.set_color(face, x, y, c);
                         }
                     }
                 }
