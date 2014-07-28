@@ -23,6 +23,9 @@ namespace Picomancer.LifeCube
         // relative location of adjacent cells
         public int[][] cell_topo;
 
+        public bool[] state, new_state;
+        public bool[][] rule;
+
         public class VB
         {
             // don't use an enum for this to avoid inability to cast to int
@@ -48,6 +51,7 @@ namespace Picomancer.LifeCube
         public static float BLACK = intBitsToFloat(0xFF000000);
         public static float C_ACTIVE = intBitsToFloat(0xFF808000);
         public static float C_NBHD = intBitsToFloat(0xFF008000);
+        public static float C_ON = intBitsToFloat(0xFF00FF00);
 
         // 6 faces:
         //
@@ -256,6 +260,21 @@ namespace Picomancer.LifeCube
                 Array.Copy(vertex, vertex_base, vertex.Length);
 
                 this.init_topology();
+                this.state = new bool[6*(this.face_width)*(this.face_height)];
+                this.new_state = new bool[6*(this.face_width)*(this.face_height)];
+
+                this.rule = new bool[2][];
+                this.rule[0] = new bool[9];
+                this.rule[1] = new bool[9];
+                this.rule[0][3] = true;
+                this.rule[1][2] = true;
+                this.rule[1][3] = true;
+
+                this.state[4*this.face_width+2] = true;
+                this.state[5*this.face_width  ] = true;
+                this.state[5*this.face_width+2] = true;
+                this.state[6*this.face_width+1] = true;
+                this.state[6*this.face_width+2] = true;
 
                 return;
             };
@@ -372,6 +391,10 @@ namespace Picomancer.LifeCube
                 {
                     move_active(0, 0,  1);
                 }
+                if (e.Key == Key.T)
+                {
+                    update_state();
+                }
                 return;
             };
  
@@ -405,6 +428,23 @@ namespace Picomancer.LifeCube
                 }
             }
             this.cell_topo = result;
+            return;
+        }
+
+        public void update_state()
+        {
+            for(int i=0;i<state.Length;i++)
+            {
+                int []a = cell_topo[i];
+                int c = 0;
+                for(int j=0;j<a.Length;j++)
+                    c += (state[a[j]] ? 1 : 0);
+                new_state[i] = rule[state[i] ? 1 : 0][c];
+            }
+            bool[] t = state;
+            state = new_state;
+            new_state = t;
+
             return;
         }
 
@@ -541,6 +581,19 @@ namespace Picomancer.LifeCube
                 int yp = nbhd[i][2];
                 if (fp >= 0)
                     this.set_color(fp, xp, yp, C_NBHD);
+            }
+
+            // show states
+            for(int face=0,i=0;face<6;face++)
+            {
+                for(int y=0;y<this.face_height;y++)
+                {
+                    for(int x=0;x<this.face_width;x++,i++)
+                    {
+                        if (state[i])
+                            this.set_color(face, x, y, C_ON);
+                    }
+                }
             }
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_id[VB.cube_vertex]);
