@@ -301,6 +301,9 @@ namespace Picomancer.LifeCube
 
             this.win.RenderFrame += (sender, e) =>
             {
+                // draw mesh
+                this.update_mesh();
+
                 // render graphics
                 GL.Enable(EnableCap.DepthTest);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -520,17 +523,22 @@ namespace Picomancer.LifeCube
             this.act_y = yp;
             this.act_face = fp;
 
-            // update highlight.
+            return;
+        }
+
+        public void update_mesh()
+        {
             Array.Copy(vertex_base, vertex, vertex.Length);
 
+            // update highlight.
             this.set_color(this.act_face, this.act_x, this.act_y, C_ACTIVE);
             int[][] nbhd = this.get_adj(this.act_face, this.act_x, this.act_y);
 
             for(int i=0;i<8;i++)
             {
-                fp = nbhd[i][0];
-                xp = nbhd[i][1];
-                yp = nbhd[i][2];
+                int fp = nbhd[i][0];
+                int xp = nbhd[i][1];
+                int yp = nbhd[i][2];
                 if (fp >= 0)
                     this.set_color(fp, xp, yp, C_NBHD);
             }
