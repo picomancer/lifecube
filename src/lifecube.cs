@@ -20,6 +20,9 @@ namespace Picomancer.LifeCube
         public uint[] face_start_offset;
         public int act_x, act_y, act_face;
 
+        // relative location of adjacent cells
+        public int[][] cell_topo;
+
         public class VB
         {
             // don't use an enum for this to avoid inability to cast to int
@@ -252,6 +255,8 @@ namespace Picomancer.LifeCube
                 vertex_base = new float[vertex.Length];
                 Array.Copy(vertex, vertex_base, vertex.Length);
 
+                this.init_topology();
+
                 return;
             };
 
@@ -367,6 +372,36 @@ namespace Picomancer.LifeCube
                 return;
             };
  
+            return;
+        }
+
+        public void init_topology()
+        {
+            int[][] result = new int[6*this.face_width*this.face_height][];
+            uint i = 0;
+            int w = (int) this.face_width, h = (int) this.face_height;
+
+            for(int face=0;face<6;face++)
+            {
+                for(int y=0;y<this.face_height;y++)
+                {
+                    for(int x=0;x<this.face_width;x++)
+                    {
+                        int[][] t = get_adj(face, x, y);
+                        int c = 0;
+                        for(uint j=0;j<t.Length;j++)
+                            c += ((t[j][0] >= 0) ? 1 : 0);
+                        int[] a = new int[c];
+                        for(uint j=0,k=0;j<t.Length;j++)
+                        {
+                            if (t[j][0] >= 0)
+                                a[k++] = (t[j][0]*h + t[j][2])*w + t[j][1];
+                        }
+                        result[i++] = a;
+                    }
+                }
+            }
+            this.cell_topo = result;
             return;
         }
 
