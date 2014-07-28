@@ -26,6 +26,11 @@ namespace Picomancer.LifeCube
         public bool[] state, new_state;
         public bool[][] rule;
 
+        public bool sim_paused;
+        public int sim_frame_countdown;
+
+        public int sim_frames_per_tick; // frames per tick
+
         public class VB
         {
             // don't use an enum for this to avoid inability to cast to int
@@ -276,6 +281,9 @@ namespace Picomancer.LifeCube
                 this.state[6*this.face_width+1] = true;
                 this.state[6*this.face_width+2] = true;
 
+                this.sim_paused = true;
+                this.sim_frames_per_tick = 8;
+
                 return;
             };
 
@@ -315,14 +323,23 @@ namespace Picomancer.LifeCube
                     m_model = m_model*Matrix4.CreateRotationX(-.025f);
                 }
 
+                if (!this.sim_paused)
+                {
+                    this.sim_frame_countdown--;
+                    if (this.sim_frame_countdown <= 0)
+                    {
+                        this.update_state();
+                        this.sim_frame_countdown = this.sim_frames_per_tick;
+                    }
+                }
+
+                this.update_mesh();
+
                 return;
             };
 
             this.win.RenderFrame += (sender, e) =>
             {
-                // draw mesh
-                this.update_mesh();
-
                 // render graphics
                 GL.Enable(EnableCap.DepthTest);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -393,6 +410,7 @@ namespace Picomancer.LifeCube
                 }
                 if (e.Key == Key.T)
                 {
+                    sim_paused = !sim_paused;
                     update_state();
                 }
                 return;
